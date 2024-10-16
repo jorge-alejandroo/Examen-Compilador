@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Separar la tabla de la calculadora */
+        #tokens-table {
+            margin-top: 40px;  /* Separar la tabla de la calculadora */
+            margin-left: 40px; /* Separ la tabla de la calculadora */
+            border-collapse: collapse;
+            width: 15%;
+            color: white;  /* Cambiar el color del texto a blanco */
+        }
+
+        #tokens-table th, #tokens-table td {
+            border: 1px solid white;  /* Cambiar el color de las líneas de la tabla a blanco */
+            padding: 8px;
+            text-align: left;
+        }
+
+        #tokens-table th {
+            border: 1px solid white;
+            padding: 8px;
+            text-align: left;
+            background-color: #aaa6a6;  /* Fondo gris claro solo para celdas de datos */
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2E3B55;
+            margin: 0;
+        }
+        .calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 220px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .calculator input {
+            grid-column: span 4;
+            height: 50px;
+            text-align: right;
+            padding: 10px;
+            font-size: 24px;
+            border-radius: 5px;
+            border: 2px solid #888;
+            background-color: #fff;
+            color: #000;
+        }
+        button {
+            font-size: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #3B3B98;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #2C2C76;
+        }
+        button.clear {
+            background-color: #EA425C;
+        }
+        button.equal {
+            background-color: #00B894;
+            grid-column: span 2;
+        }
+        button.tree {
+            background-color: #F9C929;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <input type="text" id="result" disabled>
+        <button onclick="clearResult()" class="clear">C</button>
+        <button onclick="appendNumber('(')">(</button>
+        <button onclick="appendNumber(')')">)</button>
+        <button onclick="appendOperator('/')">/</button>
+
+        <button onclick="appendNumber('7')">7</button>
+        <button onclick="appendNumber('8')">8</button>
+        <button onclick="appendNumber('9')">9</button>
+        <button onclick="appendOperator('*')">*</button>
+
+        <button onclick="appendNumber('4')">4</button>
+        <button onclick="appendNumber('5')">5</button>
+        <button onclick="appendNumber('6')">6</button>
+        <button onclick="appendOperator('-')">-</button>
+
+        <button onclick="appendNumber('1')">1</button>
+        <button onclick="appendNumber('2')">2</button>
+        <button onclick="appendNumber('3')">3</button>
+        <button onclick="appendOperator('+')">+</button>
+
+        <button onclick="appendNumber('0')">0</button>
+        <button onclick="appendNumber('.')">.</button>
+        <button class="equal" onclick="calculateResult()">=</button>
+        <button class="tree" id="tree-button">Tree</button>
+    </div>
+
+    <table id="tokens-table" style="display:none">
+        <thead>
+            <tr>
+                <th>Token</th>
+                <th>Tipo</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        let resultElement = document.getElementById('result');
+    
+        function appendNumber(number) {
+            resultElement.value += number;
+        }
+    
+        function appendOperator(operator) {
+            resultElement.value += operator;
+        }
+    
+        function clearResult() {
+            resultElement.value = '';
+            document.getElementById('tokens-table').style.display = 'none';
+        }
+    
+        function calculateResult() {
+            let expression = resultElement.value;
+    
+            $.post("/analyze", { expression: expression }, function(data) {
+                // Mostrar el resultado de la operación en la calculadora
+                resultElement.value = data.result;
+    
+                // Mostrar los tokens en la tabla
+                let table = $("#tokens-table tbody");
+                table.empty();
+                data.tokens.forEach(function(item) {
+                    table.append("<tr><td>" + item.token + "</td><td>" + item.type + "</td></tr>");
+                });
+                document.getElementById('tokens-table').style.display = 'table';
+            });
+        }
+
+        // Función para redirigir a tree.html y guardar la operación
+        document.getElementById('tree-button').addEventListener('click', function() {
+            let expression = resultElement.value;
+            if (!isNaN(expression)) {
+                alert("Por favor ingresa una operación y no solo un número.");
+            return;
+        }
+
+        // Guardar solo la operación sin el resultado
+        const operation = expression;
+            localStorage.setItem('operation', operation);
+            window.location.href = '/tree';
+        });
+    </script>
+</body>
+</html>
